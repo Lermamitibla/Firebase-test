@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Vodovoz_test.ViewModel
+namespace Firebase_test.ViewModel
 {
     abstract class BaseVM : INotifyPropertyChanged
     {

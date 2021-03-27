@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace Vodovoz_test.Commands
+namespace Firebase_test.Commands
 {
     abstract class BaseCommand : ICommand
     {

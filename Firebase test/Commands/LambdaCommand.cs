@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Vodovoz_test.Commands
+namespace Firebase_test.Commands
 {
     class LambdaCommand : BaseCommand
     {
