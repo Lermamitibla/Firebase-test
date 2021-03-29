@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Firebase_test.ViewModel;
 using System.Windows.Input;
 using Firebase_test.Commands;
 using Firebase.Auth;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using System.Windows;
+using System.Configuration;
+
 
 namespace Firebase_test.ViewModel
 {
@@ -43,24 +41,25 @@ namespace Firebase_test.ViewModel
             set { if (!_accountInfo.Equals(value)) _accountInfo = value; OnPropertyChanged(); }
         }
 
-
         public MainVM()
         {
             CreateCommands();
             authProvider = PrepareAuthProvider();
         }
 
-
         public ICommand LoginButtonCommand { get; private set; }
-        private void OnLoginButtonCommandExecuted(object p)
+        private async void OnLoginButtonCommandExecuted(object p)
         {
-          Task<FirebaseAuthLink> login = Login();
-            if (login.IsFaulted) MessageBox.Show(login.Exception.Message);
-            if (login.IsCompleted) 
+            try
             {
-                AccountInfo = login.Result.User.ToString();
-                firebaseToken = login.Result.FirebaseToken;
-            } 
+                FirebaseAuthLink login = await Login();
+                AccountInfo = login.User.Email;
+                firebaseToken = login.FirebaseToken;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), ex.Message);
+            }
         }
         private bool CanLoginButtonCommandExecute(object p)
         {
@@ -89,15 +88,16 @@ namespace Firebase_test.ViewModel
         private bool CanDeleteAccButtonCommandExecute(object p) => true;
 
         public ICommand CreateAccButtonCommand { get; private set; }
-        private void OnCreateAccButtonCommandExecuted(object p)
+        private async void OnCreateAccButtonCommandExecuted(object p)
         {
-            var create = CreateAccount().ContinueWith(v => MessageBox.Show(v.Status.ToString(), v.Exception.Message.ToString()));
-           // create.Wait();
-            if (create.IsFaulted) MessageBox.Show(create.Exception.Message);
-            if (create.IsCompleted) MessageBox.Show("Account has been created");
-
-
-            
+            try 
+            {
+                FirebaseAuthLink createAccount = await CreateAccount();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }  
         }
         private bool CanCreateAccButtonCommandExecute(object p)
         {
@@ -111,9 +111,11 @@ namespace Firebase_test.ViewModel
            .BuildServiceProvider();
 
             var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            return new FirebaseAuthProvider("SuperApiKey11", httpClientFactory);
+            string apiKey = ConfigurationManager.AppSettings.Get("APIKey");
+            return new FirebaseAuthProvider(apiKey, httpClientFactory);
 
         }
+
         public void CreateCommands()
         {
             LoginButtonCommand = new LambdaCommand(OnLoginButtonCommandExecuted, CanLoginButtonCommandExecute);
@@ -137,9 +139,7 @@ namespace Firebase_test.ViewModel
 
         private async Task<FirebaseAuthLink> CreateAccount()
         {
-            var create = await authProvider.CreateUserWithEmailAndPasswordAsync(_email, _password, "Test", true);
-            
-            return create;
+            return await authProvider.CreateUserWithEmailAndPasswordAsync(_email, _password, "Test", true);
         }
 
     }
